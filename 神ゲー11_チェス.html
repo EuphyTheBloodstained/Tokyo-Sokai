@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプルなチェスゲーム</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .player-info {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+            width: 300px;
+        }
+
+        .player-info p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        #cpu-name {
+            font-weight: bold;
+            color: #d32f2f; /* 赤系の色 */
+        }
+
+        #cpu-message {
+            margin-top: 10px;
+            font-style: italic;
+            color: #777;
+            min-height: 20px; /* メッセージがない時のために高さを確保 */
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 2px solid #333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #fff; /* ボードの背景色 */
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px; /* 駒のサイズ（仮） */
+            cursor: pointer;
+            user-select: none; /* テキスト選択を防ぐ */
+            position: relative; /* 駒の配置用 */
+        }
+
+        .white {
+            background-color: #f0d9b5; /* 明るいマス */
+        }
+
+        .black {
+            background-color: #b58863; /* 暗いマス */
+        }
+
+        .square.selected {
+            background-color: #a3e635; /* 選択されたマス */
+            border: 2px solid #0a0;
+            box-sizing: border-box; /* 枠線がサイズに含まれるように */
+        }
+
+        .square.possible-move {
+            background-color: #81c784; /* 移動可能なマス */
+            border: 2px dashed #050;
+            box-sizing: border-box;
+        }
+
+        .square.target-capture {
+            background-color: #e57373; /* 駒が取れるマス */
+            border: 2px dashed #a00;
+            box-sizing: border-box;
+        }
+
+        /* 駒のスタイル */
+        .piece {
+            font-size: 40px; /* 少し大きく */
+            line-height: 1;
+            text-align: center;
+            position: absolute; /* マスの中で中央に配置 */
+        }
+
+        .piece.white-piece {
+            color: #fff; /* 白の駒 */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* 視認性向上 */
+        }
+
+        .piece.black-piece {
+            color: #333; /* 黒の駒 */
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5); /* 視認性向上 */
+        }
+
+        #game-status {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>シンプルなチェスゲーム</h1>
+
+    <div class="player-info">
+        <p>あなたのプレイヤー: **人間 (白)**</p>
+        <p>CPUプレイヤー: <span id="cpu-name"></span> **(黒)**</p>
+        <p id="cpu-message"></p>
+    </div>
+
+    <div class="chessboard" id="chessboard">
+        </div>
+
+    <p id="game-status">あなたのターンです。</p>
+
+    <script>
+        const chessboardDiv = document.getElementById('chessboard');
+        const cpuNameSpan = document.getElementById('cpu-name');
+        const cpuMessageP = document.getElementById('cpu-message');
+        const gameStatusP = document.getElementById('game-status');
+
+        // CPUのプレイヤー名リスト
+        const cpuPlayers = ['貴族様', '黒のキング', 'リヴァル', 'ルルーシュ'];
+
+        // CPUのセリフリスト (戦局に応じて表示される想定)
+        const cpuDialogue = [
+            'ふむ、次の手を考えよう。',
+            'なかなか面白い手だ。',
+            'これは予想外の一手！',
+            'チェック！',
+            '王手だ！', // 簡易ロジックのため、実際にはチェックメイトではない場合も表示される可能性あり
+            '敗北は許されない...',
+            '私の勝利は揺るぎない。',
+            '戦略通りに進んでいる。',
+            'これでどうだ？',
+            '一歩先を読んでいる。',
+            '…なるほど。',
+            '貴様の動きは読めている。'
+        ];
+
+        // チェス盤の状態を表す配列
+        // null: 空きマス
+        // 'p': 黒ポーン, 'r': 黒ルーク, 'n': 黒ナイト, 'b': 黒ビショップ, 'q': 黒クイーン, 'k': 黒キング
+        // 'P': 白ポーン, 'R': 白ルーク, 'N': 白ナイト, 'B': 白ビショップ, 'Q': 白クイーン, 'K': 白キング
+        let boardState = Array(8).fill(null).map(() => Array(8).fill(null));
+
+        // Unicodeのチェス駒マップ
+        const unicodePieces = {
+            'p': '♟', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚',
+            'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'
+        };
+
+        let selectedPiece = null; // 現在選択されている駒のDOM要素
+        let selectedRow = -1;
+        let selectedCol = -1;
+        let currentPlayer = 'white'; // 'white' or 'black'
+
+        // チェス盤を初期化し、マス目を生成する関数
+        function initializeBoard() {
+            chessboardDiv.innerHTML = ''; // 既存のマスをクリア
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.classList.add((i + j) % 2 === 0 ? 'white' : 'black');
+                    square.dataset.row = i;
+                    square.dataset.col = j;
+                    square.addEventListener('click', onSquareClick);
+                    chessboardDiv.appendChild(square);
+                }
+            }
+            setupInitialPieces(); // 駒の初期配置
+        }
+
+        // 駒の初期配置
+        function setupInitialPieces() {
+            // 黒の駒
+            setPiece(0, 0, 'r'); setPiece(0, 1, 'n'); setPiece(0, 2, 'b'); setPiece(0, 3, 'q');
+            setPiece(0, 4, 'k'); setPiece(0, 5, 'b'); setPiece(0, 6, 'n'); setPiece(0, 7, 'r');
+            for (let j = 0; j < 8; j++) {
+                setPiece(1, j, 'p');
+            }
+
+            // 白の駒
+            setPiece(7, 0, 'R'); setPiece(7, 1, 'N'); setPiece(7, 2, 'B'); setPiece(7, 3, 'Q');
+            setPiece(7, 4, 'K'); setPiece(7, 5, 'B'); setPiece(7, 6, 'N'); setPiece(7, 7, 'R');
+            for (let j = 0; j < 8; j++) {
+                setPiece(6, j, 'P');
+            }
+        }
+
+        // 指定されたマスに駒をセットするヘルパー関数
+        function setPiece(row, col, pieceChar) {
+            const square = chessboardDiv.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (square) {
+                // 既に駒がある場合は削除
+                if (square.firstChild) {
+                    square.removeChild(square.firstChild);
+                }
+                const piece = document.createElement('div');
+                piece.classList.add('piece');
+                // 駒の種類に応じて白か黒のクラスを追加
+                piece.classList.add(pieceChar === pieceChar.toUpperCase() ? 'white-piece' : 'black-piece');
+                piece.textContent = unicodePieces[pieceChar];
+                square.appendChild(piece);
+                boardState[row][col] = pieceChar; // 盤の状態を更新
+            }
+        }
+
+        // 指定されたマスから駒を削除するヘルパー関数
+        function removePiece(row, col) {
+            const square = chessboardDiv.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (square && square.firstChild) {
+                square.removeChild(square.firstChild);
+            }
+            boardState[row][col] = null; // 盤の状態を更新
+        }
+
+        // マスがクリックされたときの処理
+        function onSquareClick(event) {
+            if (currentPlayer === 'black') return; // 黒のターンなら操作不可
+
+            const clickedSquare = event.currentTarget;
+            const row = parseInt(clickedSquare.dataset.row);
+            const col = parseInt(clickedSquare.dataset.col);
+            const pieceChar = boardState[row][col];
+
+            // 選択解除
+            if (selectedPiece && selectedRow === row && selectedCol === col) {
+                clearSelection();
+                return;
+            }
+
+            // 駒が選択されている状態で、移動可能なマスをクリックした場合
+            if (selectedPiece && clickedSquare.classList.contains('possible-move')) {
+                movePiece(selectedRow, selectedCol, row, col);
+                endTurn();
+                return;
+            }
+
+            // 白の駒を選択した場合
+            if (pieceChar && pieceChar === pieceChar.toUpperCase()) { // 大文字は白の駒
+                clearSelection();
+                selectedPiece = clickedSquare;
+                selectedRow = row;
+                selectedCol = col;
+                clickedSquare.classList.add('selected');
+                highlightPossibleMoves(row, col);
+            } else {
+                // 白の駒がないマスをクリックした場合（駒が選択されていない、または黒の駒）
+                clearSelection();
+            }
+        }
+
+        // 選択状態とハイライトをクリアする
+        function clearSelection() {
+            if (selectedPiece) {
+                selectedPiece.classList.remove('selected');
+                selectedPiece = null;
+                selectedRow = -1;
+                selectedCol = -1;
+            }
+            document.querySelectorAll('.possible-move').forEach(s => s.classList.remove('possible-move'));
+            document.querySelectorAll('.target-capture').forEach(s => s.classList.remove('target-capture'));
+        }
+
+        // 駒の移動処理
+        function movePiece(fromRow, fromCol, toRow, toCol) {
+            const pieceChar = boardState[fromRow][fromCol];
+            removePiece(fromRow, fromCol);
+            setPiece(toRow, toCol, pieceChar);
+            clearSelection();
+        }
+
+        // 駒の合法手をハイライト表示する（簡略化されたロジック）
+        // この関数は非常に単純な「移動可能とみなす」マスを表示するだけで、
+        // 実際のチェスのルール（駒の動き、チェックなど）は考慮していません。
+        function highlightPossibleMoves(row, col) {
+            const piece = boardState[row][col];
+            if (!piece) return;
+
+            // ポーンの動き（非常に単純化）
+            if (piece === 'P') { // 白のポーン
+                if (row > 0 && !boardState[row - 1][col]) { // 前方のマスが空
+                    addPossibleMove(row - 1, col);
+                }
+                // 斜め前方に黒の駒がある場合（捕獲）
+                if (row > 0 && col > 0 && boardState[row - 1][col - 1] && boardState[row - 1][col - 1] === boardState[row - 1][col - 1].toLowerCase()) {
+                    addPossibleMove(row - 1, col - 1, true);
+                }
+                if (row > 0 && col < 7 && boardState[row - 1][col + 1] && boardState[row - 1][col + 1] === boardState[row - 1][col + 1].toLowerCase()) {
+                    addPossibleMove(row - 1, col + 1, true);
+                }
+            } else {
+                // その他の駒は、とりあえず隣接する空きマスや相手の駒があるマスを候補とする（非常に簡易的）
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const newRow = row + dr;
+                        const newCol = col + dc;
+
+                        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                            const targetPiece = boardState[newRow][newCol];
+                            if (!targetPiece) { // 空きマス
+                                addPossibleMove(newRow, newCol);
+                            } else if (targetPiece === targetPiece.toLowerCase()) { // 相手の駒（黒）
+                                addPossibleMove(newRow, newCol, true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 移動可能なマスにクラスを追加するヘルパー関数
+        function addPossibleMove(row, col, isCapture = false) {
+            const square = chessboardDiv.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (square) {
+                square.classList.add(isCapture ? 'target-capture' : 'possible-move');
+            }
+        }
+
+        // ターン終了処理
+        function endTurn() {
+            currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+            gameStatusP.textContent = currentPlayer === 'white' ? 'あなたのターンです。' : 'CPUのターンです。';
+
+            if (currentPlayer === 'black') {
+                setTimeout(cpuTurn, 1500); // 1.5秒後にCPUの手番
+            }
+        }
+
+        // CPUの手番ロジック (簡易AI)
+        async function cpuTurn() {
+            cpuSpeak(); // セリフをランダムに表示
+
+            const cpuPieces = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = boardState[r][c];
+                    // 黒の駒を探す
+                    if (piece && piece === piece.toLowerCase()) {
+                        cpuPieces.push({ row: r, col: c, piece: piece });
+                    }
+                }
+            }
+
+            // 黒の駒が一つもなければゲーム終了（バグ、または最終局面）
+            if (cpuPieces.length === 0) {
+                gameStatusP.textContent = 'CPUに動かせる駒がありません！あなたの勝ちです！';
+                currentPlayer = 'game_over';
+                return;
+            }
+
+            let moved = false;
+            let attempts = 0;
+            const maxAttempts = 100; // 無限ループ防止
+
+            while (!moved && attempts < maxAttempts) {
+                attempts++;
+                const randomPieceIndex = Math.floor(Math.random() * cpuPieces.length);
+                const { row: fromR, col: fromC, piece: pieceChar } = cpuPieces[randomPieceIndex];
+
+                const possibleMoves = [];
+
+                // ポーンの動き (CPU用、簡略化)
+                if (pieceChar === 'p') {
+                    if (fromR < 7 && !boardState[fromR + 1][fromC]) { // 前方のマスが空
+                        possibleMoves.push({ toR: fromR + 1, toC: fromC });
+                    }
+                    // 斜め前方に白の駒がある場合（捕獲）
+                    if (fromR < 7 && fromC > 0 && boardState[fromR + 1][fromC - 1] && boardState[fromR + 1][fromC - 1] === boardState[fromR + 1][fromC - 1].toUpperCase()) {
+                        possibleMoves.push({ toR: fromR + 1, toC: fromC - 1 });
+                    }
+                    if (fromR < 7 && fromC < 7 && boardState[fromR + 1][fromC + 1] && boardState[fromR + 1][fromC + 1] === boardState[fromR + 1][fromC + 1].toUpperCase()) {
+                        possibleMoves.push({ toR: fromR + 1, toC: fromC + 1 });
+                    }
+                } else {
+                    // その他の駒は隣接する空きマスや相手の駒があるマスを候補とする（非常に簡易的）
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const newRow = fromR + dr;
+                            const newCol = fromC + dc;
+
+                            if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                                const targetPiece = boardState[newRow][newCol];
+                                if (!targetPiece || targetPiece === targetPiece.toUpperCase()) { // 空きマスまたは白の駒
+                                    possibleMoves.push({ toR: newRow, toC: newCol });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (possibleMoves.length > 0) {
+                    const randomMoveIndex = Math.floor(Math.random() * possibleMoves.length);
+                    const { toR, toC } = possibleMoves[randomMoveIndex];
+
+                    // 駒の移動を実行
+                    movePiece(fromR, fromC, toR, toC);
+                    moved = true;
+                }
+            }
+
+            if (!moved) {
+                // 動かせる駒が見つからなかった場合
+                gameStatusP.textContent = 'CPUは動かせなくなりました！あなたの勝ちです！';
+                currentPlayer = 'game_over';
+            } else {
+                endTurn(); // CPUのターン終了
+            }
+        }
+
+
+        // CPUのプレイヤー名をランダムに設定する関数
+        function setCpuName() {
+            const randomIndex = Math.floor(Math.random() * cpuPlayers.length);
+            cpuNameSpan.textContent = cpuPlayers[randomIndex];
+        }
+
+        // CPUがセリフを発する関数
+        function cpuSpeak() {
+            const randomIndex = Math.floor(Math.random() * cpuDialogue.length);
+            cpuMessageP.textContent = `CPU (${cpuNameSpan.textContent}): 「${cpuDialogue[randomIndex]}」`;
+        }
+
+        // ゲーム開始時の処理
+        initializeBoard(); // チェス盤の初期化と駒の配置
+        setCpuName();      // CPUプレイヤー名の設定
+
+        // ゲーム開始時のCPUセリフ
+        setTimeout(cpuSpeak, 1000); // 1秒後に最初のセリフ
+
+    </script>
+</body>
+</html>

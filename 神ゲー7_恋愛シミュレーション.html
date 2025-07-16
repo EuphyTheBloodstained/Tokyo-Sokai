@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今からガチ恋始めます。</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hina+Mincho&family=Sawarabi+Mincho&display=swap'); /* 恋愛リアリティーショー風フォント */
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+            color: #333;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            color: #ff69b4;
+            margin-bottom: 20px;
+        }
+
+        /* タイトルスタイル */
+        #game-title {
+            font-family: 'Hina Mincho', 'Sawarabi Mincho', 'BIZ UDPMincho', serif; /* 恋愛リアリティーショー風フォント */
+            font-size: 2.8em; /* 大きめのフォントサイズ */
+            color: #ff1493; /* 濃いピンク */
+            text-shadow: 3px 3px 6px rgba(255, 105, 180, 0.6), -3px -3px 6px rgba(255, 255, 255, 0.8); /* 影で立体感 */
+            margin-bottom: 30px;
+            letter-spacing: 2px; /* 文字間隔 */
+            line-height: 1.2;
+        }
+
+        .character-selection button {
+            background-color: #ffb6c1;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .character-selection button:hover {
+            background-color: #ff99aa;
+            transform: translateY(-3px);
+        }
+
+        .game-area {
+            margin-top: 20px;
+        }
+
+        .dialogue-box {
+            background-color: #e0ffff;
+            border: 1px solid #b0e0e6;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #2f4f4f;
+            line-height: 1.6;
+        }
+
+        .choices button {
+            background-color: #98fb98;
+            color: #333;
+            border: none;
+            padding: 12px 20px;
+            margin: 8px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            width: calc(100% - 16px);
+            max-width: 450px;
+            text-align: left;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .choices button:hover {
+            background-color: #7fffd4;
+            transform: translateX(5px);
+        }
+
+        .status-bar {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        .status-bar span {
+            font-weight: bold;
+            color: #ff4500;
+        }
+
+        /* 好感度表示を非表示にする */
+        .affection-hidden {
+            display: none;
+        }
+
+        .result-screen, .confession-screen {
+            background-color: #fffacd;
+            border: 1px solid #ffd700;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 1.3em;
+            color: #8b0000;
+            line-height: 1.8;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-screen button, .confession-screen button {
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin-top: 25px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .result-screen button:hover, .confession-screen button:hover {
+            background-color: #ff4500;
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .bad-end-screen {
+            background-color: #ffe4e1;
+            border: 1px solid #ffb6c1;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 1.3em;
+            color: #dc143c;
+            line-height: 1.8;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .bad-end-screen h2 {
+            color: #dc143c;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="start-screen">
+            <h1 id="game-title">今からガチ恋始めます。</h1>
+            <p>好みのヒロインを選んで、素敵な恋を始めよう！</p>
+            <div class="character-selection">
+                <button id="select-heroine-1">ヒロインAを選ぶ</button>
+                <button id="select-heroine-2">ヒロインBを選ぶ</button>
+                <button id="select-heroine-3">ヒロインCを選ぶ</button>
+            </div>
+        </div>
+
+        <div id="intro-screen" class="hidden">
+            <h2 id="intro-heroine-name"></h2>
+            <div class="dialogue-box" id="intro-dialogue-text"></div>
+            <button id="intro-next-button">ゲームを始める</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <h2 id="heroine-name-display"></h2>
+            <div class="dialogue-box" id="dialogue-text"></div>
+            <div class="choices" id="choice-buttons"></div>
+            <div class="status-bar">
+                会話回数: <span id="turn-count">0</span> / 10 <span class="affection-hidden">| 好感度: <span id="affection-display">0</span></span>
+            </div>
+        </div>
+
+        <div id="confession-screen" class="hidden">
+            <h2 id="confession-title">告白</h2>
+            <div class="dialogue-box" id="confession-dialogue-text"></div>
+            <button id="confession-next-button">次へ</button>
+        </div>
+
+        <div id="result-screen" class="hidden">
+            <h2 id="result-title"></h2>
+            <p id="result-message"></p>
+            <button id="restart-button">もう一度遊ぶ</button>
+        </div>
+
+        <div id="bad-end-screen" class="hidden">
+            <h2 id="bad-end-title">強制バッドエンド</h2>
+            <p id="bad-end-message"></p>
+            <button id="restart-button-bad-end">もう一度遊ぶ</button>
+        </div>
+    </div>
+
+    <script>
+        const startScreen = document.getElementById('start-screen');
+        const introScreen = document.getElementById('intro-screen'); // 追加
+        const gameScreen = document.getElementById('game-screen');
+        const confessionScreen = document.getElementById('confession-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const badEndScreen = document.getElementById('bad-end-screen');
+
+        const introHeroineName = document.getElementById('intro-heroine-name'); // 追加
+        const introDialogueText = document.getElementById('intro-dialogue-text'); // 追加
+        const introNextButton = document.getElementById('intro-next-button'); // 追加
+
+        const heroineNameDisplay = document.getElementById('heroine-name-display');
+        const dialogueText = document.getElementById('dialogue-text');
+        const choiceButtons = document.getElementById('choice-buttons');
+        const turnCountDisplay = document.getElementById('turn-count');
+        const affectionDisplay = document.getElementById('affection-display'); // 好感度表示は非表示にするが、要素は残す
+
+        const confessionDialogueText = document.getElementById('confession-dialogue-text');
+        const confessionNextButton = document.getElementById('confession-next-button');
+
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const restartButton = document.getElementById('restart-button');
+        const restartButtonBadEnd = document.getElementById('restart-button-bad-end');
+        const badEndTitle = document.getElementById('bad-end-title');
+        const badEndMessage = document.getElementById('bad-end-message');
+
+        const selectHeroine1Button = document.getElementById('select-heroine-1');
+        const selectHeroine2Button = document.getElementById('select-heroine-2');
+        const selectHeroine3Button = document.getElementById('select-heroine-3');
+
+        let currentHeroine = null;
+        let affection = 0;
+        let turn = 0;
+        let confessionStep = 0;
+        let confessionResult = ''; // 'lover', 'friend', 'rejected'
+
+        const heroineNamesPool = [
+            "愛", "葵", "明里", "明日香", "梓", "彩", "杏", "泉", "一花", "苺",
+            "恵", "絵美", "エリ", "佳織", "香澄", "楓", "加奈", "可奈子", "花恋", "琴音",
+            "小春", "さくら", "沙織", "里奈", "詩織", "静香", "紗良", "千尋", "千夏", "直子",
+            "奈々", "七海", "菜摘", "寧々", "乃愛", "葉月", "晴香", "遥", "光", "日菜",
+            "ひまり", "広美", "風花", "ふう", "舞", "真央", "真琴", "麻友", "満月", "美月",
+            "美咲", "美穂", "未来", "萌", "桃子", "優", "結愛", "結衣", "優花", "由美",
+            "雪乃", "夢", "莉子", "麗", "玲奈", "和奏", "あかり", "えみり", "かれん", "ここ",
+            "さな", "つむぎ", "のぞみ", "ひかり", "めい", "ゆいか", "りお", "るな", "わかな", "あおい",
+            "あやか", "いのり", "うた", "えれな", "かのん", "こはる", "さき", "しほ", "すず", "せな",
+            "ちとせ", "なぎさ", "はるか", "ふうか", "ほのか", "まこ", "みう", "めぐみ", "ゆずき", "りん",
+            "あずさ", "かえで", "ここな", "さやか", "しおり", "ななみ", "ひなた", "まゆ", "みゆ", "ゆめ",
+            "こころ", "はな", "りな", "もも", "ゆき", "みらい", "くるみ", "ゆず", "あいり", "ほなみ",
+            "まお", "かれん", "なつみ", "みお", "ゆあ", "さや", "ひなた", "ことね", "れいな", "みう",
+            "あおい", "めい", "ゆい", "えな", "こはる", "りんか", "ふう", "なな", "しほ", "ゆいな",
+            "ゆづき", "りこ", "さき", "あかね", "ひまり", "なぎさ", "あやね", "ももか", "ゆめな", "さくらこ",
+            "みつき", "ななこ", "まゆみ", "ゆりあ", "れい", "あや", "かれん", "すみれ", "はづき", "ゆかな"
+        ];
+        let availableHeroineNames = [];
+
+        // 全会話パターン（重複を減らし、多様な会話を追加）
+        const allDialogues = [
+            { text: "やっほー！今日はめっちゃ良い天気だね！", choices: [ { text: "ホントだね！どこか遊びに行きたくなるよ。", effect: 25 }, { text: "そうだね。", effect: 5 }, { text: "天気とかどうでもいい。", effect: -15 }, { text: "天気より君の方がキラキラしてるよ。", effect: 30 }, { text: "あんまり興味ないな。", effect: -10 } ] },
+            { text: "最近さ、何か面白いことあった？", choices: [ { text: "この前、カフェで新作のケーキ食べたら最高だった！", effect: 20 }, { text: "特にないかな。", effect: -5 }, { text: "君と話してるのが一番面白いよ。", effect: 28 }, { text: "面白いことなんて滅多にないって。", effect: -12 }, { text: "君に話すようなことじゃないし。", effect: -20 } ] },
+            { text: "ねぇねぇ、おすすめのカフェとか知ってる？", choices: [ { text: "〇〇カフェのパンケーキがめちゃくちゃ美味しいよ。", effect: 25 }, { text: "特に知らない。", effect: -10 }, { text: "俺がいつも行く場所なら教えてあげられるけど？", effect: 15 }, { text: "カフェはあんまり行かないな。", effect: -5 }, { text: "俺と一緒に行けばどこでも楽しいって！", effect: 30 } ] },
+            { text: "君の趣味って何？教えてほしいな！", choices: [ { text: "読書が好きだよ。", effect: 18 }, { text: "ゲームだね。", effect: 8 }, { text: "君の趣味が知りたいな。", effect: 25 }, { text: "特に趣味って呼べるものはないかも。", effect: -5 }, { text: "趣味について語るのは苦手なんだ。", effect: -15 } ] },
+            { text: "もしよかったらさ、今度一緒にどこか行かない？", choices: [ { text: "え、マジで！？ぜひ行きたい！", effect: 40 }, { text: "考えとくね。", effect: 0 }, { text: "ごめん、忙しいから無理。", effect: -40 }, { text: "いいね！どこ行きたい？", effect: 35 }, { text: "どこ行くかにもよるかな？", effect: 20 } ] },
+            { text: "最近、ちょっと疲れちゃって…。", choices: [ { text: "大丈夫？無理しないでね。", effect: 28 }, { text: "お疲れ様。", effect: 5 }, { text: "俺でよかったら、いつでも話聞くよ。", effect: 30 }, { text: "ちゃんと休んでね。", effect: 15 }, { text: "俺には関係ない。", effect: -20 } ] },
+            { text: "私、猫が好きなんだよね。", choices: [ { text: "俺も猫、めっちゃ好きだよ！", effect: 25 }, { text: "犬派だね。", effect: -5 }, { text: "猫カフェとか行ってみる？", effect: 28 }, { text: "動物はあんまり得意じゃないんだ。", effect: -15 }, { text: "可愛いよね。", effect: 12 } ] },
+            { text: "週末って何して過ごしてた？", choices: [ { text: "家でゆっくりしてたよ。", effect: 12 }, { text: "友達と遊びに行ったよ。", effect: 18 }, { text: "君のこと考えてたよ。", effect: 30 }, { text: "特に何もしてないかな。", effect: -5 }, { text: "忙しくてどこにも行けなかったんだ。", effect: -10 } ] },
+            { text: "最近、ハマってることとかある？", choices: [ { text: "新しいゲームに夢中だよ。", effect: 12 }, { text: "料理に挑戦してるんだ。", effect: 20 }, { text: "君にハマっちゃってるよ。", effect: 35 }, { text: "特にこれといって…。", effect: -5 }, { text: "ハマるようなものはないね。", effect: -12 } ] },
+            { text: "俺と話すのって楽しい？", choices: [ { text: "もちろん！めちゃくちゃ楽しいよ。", effect: 40 }, { text: "まあまあかな。", effect: 0 }, { text: "正直、あんまり楽しくない。", effect: -40 }, { text: "君と話す時間は、俺にとって宝物だよ。", effect: 50 }, { text: "普通だよ。", effect: -10 } ] },
+            { text: "ねぇ、最近おすすめの本とかある？", choices: [ { text: "ミステリー小説どう？", effect: 20 }, { text: "自己啓発本をよく読むよ。", effect: 8 }, { text: "君といると本どころじゃないって！", effect: 30 }, { text: "あんまり本は読まないんだ。", effect: -10 }, { text: "君の好みを知ってからおすすめしたいな。", effect: 25 } ] },
+            { text: "休日は何して過ごすことが多い？", choices: [ { text: "アウトドア派だから、よく出かけるね。", effect: 25 }, { text: "家で映画見たりするよ。", effect: 12 }, { text: "君と一緒に過ごしたいな。", effect: 35 }, { text: "特に決まってない。", effect: -5 }, { text: "君に言う必要ないじゃん。", effect: -20 } ] },
+            { text: "もし宝くじが当たったらどうする？", choices: [ { text: "世界一周旅行に行きたい！", effect: 28 }, { text: "堅実に貯金するよ。", effect: 5 }, { text: "君のために使うよ。", effect: 40 }, { text: "宝くじなんて当たらないって。", effect: -15 }, { text: "まずは豪遊するね。", effect: 12 } ] },
+            { text: "好きな食べ物って何？", choices: [ { text: "甘いものが好き！", effect: 20 }, { text: "辛いものが好きだよ。", effect: 12 }, { text: "君が作ってくれるものなら何でも好き。", effect: 30 }, { text: "特にないかな。", effect: -5 }, { text: "人に食べ物の話されるの嫌いなんだ。", effect: -25 } ] },
+            { text: "私って、どんなタイプに見える？", choices: [ { text: "明るくて優しいね。", effect: 30 }, { text: "ちょっとミステリアスな雰囲気があるね。", effect: 25 }, { text: "俺の理想のタイプだよ。", effect: 40 }, { text: "正直よく分かんない。", effect: -20 }, { text: "あんまり興味ないな。", effect: -30 } ] },
+            { text: "最近、何か挑戦してることある？", choices: [ { text: "新しい語学を勉強中だよ。", effect: 25 }, { text: "料理のレパートリー増やそうと頑張ってる！", effect: 20 }, { text: "君の心を射止めることに挑戦中だよ。", effect: 40 }, { text: "特にないね。", effect: -10 }, { text: "挑戦とか面倒くさいだけ。", effect: -20 } ] },
+            { text: "私、雨の日が好きなんだけど、君はどう？", choices: [ { text: "俺も雨の日、結構好きだよ。", effect: 25 }, { text: "晴れの日の方が好きだな。", effect: 5 }, { text: "君と一緒なら、どんな天気でも好きになれるよ。", effect: 35 }, { text: "雨の日は気分が沈むんだ。", effect: -10 }, { text: "天気なんてどうでもいいじゃん。", effect: -15 } ] },
+            { text: "もし一日だけ透明人間になれるとしたら、何する？", choices: [ { text: "世界中の美術館を巡るかな。", effect: 18 }, { text: "イタズラしてみんなを驚かせる！", effect: 12 }, { text: "君のそばにずっといるよ。", effect: 40 }, { text: "特にやりたいことはないよ。", effect: -5 }, { text: "そんな非現実的なこと考えないし。", effect: -20 } ] },
+            { text: "将来、どんな風になりたいとかある？", choices: [ { text: "人を幸せにできる仕事に就きたいな。", effect: 28 }, { text: "安定した生活を送りたいよ。", effect: 12 }, { text: "君と幸せな家庭を築きたいな。", effect: 50 }, { text: "まだ具体的には考えてないな。", effect: -10 }, { text: "将来のことなんて考える意味ないよ。", effect: -30 } ] },
+            { text: "私といると落ち着くって言われるんだけど、どう思う？", choices: [ { text: "うん、すごく落ち着くよ。", effect: 30 }, { text: "そうでもないかな。", effect: -20 }, { text: "落ち着くどころか、ドキドキが止まらないよ。", effect: 40 }, { text: "人によるんじゃない？", effect: -10 }, { text: "特に何も感じない。", effect: -30 } ] },
+            { text: "ねぇ、何か面白いこと、あった？", choices: [ { text: "最近、新しい趣味見つけたんだ！", effect: 25 }, { text: "特にないよ。", effect: -10 }, { text: "君に会えたことが一番面白いことだよ。", effect: 35 }, { text: "面白い話なんてないし。", effect: -20 }, { text: "君と話すことの方が面白いよ。", effect: 28 } ] },
+            { text: "疲れてない？顔色悪いよ。", choices: [ { text: "ちょっと疲れてるかも。", effect: 12 }, { text: "大丈夫だよ！元気だよ。", effect: 20 }, { text: "君の顔を見たら元気出たよ。", effect: 30 }, { text: "放っといて。", effect: -30 }, { text: "君に言われたくない。", effect: -40 } ] },
+            { text: "私って、ちょっと変わってるかな？", choices: [ { text: "いやいや、個性的で素敵だと思うよ。", effect: 30 }, { text: "ちょっとそうかもね。", effect: -10 }, { text: "君のそういうところがたまらなく好きだよ。", effect: 40 }, { text: "分かんない。", effect: -15 }, { text: "別にどうでもいい。", effect: -25 } ] },
+            { text: "もしタイムマシンがあったら、いつに行きたい？", choices: [ { text: "未来に行って、科学の発展を見たいな。", effect: 25 }, { text: "過去に戻って、歴史上の出来事を体験したい。", effect: 20 }, { text: "君と初めて会った日に戻って、もう一度やり直したいな。", effect: 50 }, { text: "タイムマシンなんていらないよ。", effect: -20 }, { text: "特にないね。", effect: -10 } ] },
+            { text: "私って、実は寂しがり屋なんだ。", choices: [ { text: "そうなの？…意外だね。", effect: 12 }, { text: "俺も寂しがり屋だよ。", effect: 25 }, { text: "俺がずっとそばにいるから、もう寂しい思いはさせないよ。", effect: 50 }, { text: "へぇ、そうなんだ。", effect: -20 }, { text: "俺には関係ないし。", effect: -30 } ] },
+            { text: "今日の夜ご飯、何にするか迷ってるんだ。", choices: [ { text: "美味しいレストラン、知ってるよ。", effect: 25 }, { text: "コンビニで済ませるかな。", effect: -5 }, { text: "俺が君のために作ってあげようか？", effect: 35 }, { text: "自分で考えたら？", effect: -20 }, { text: "好きなものを食べたらいいんじゃない？", effect: -10 } ] },
+            { text: "私、昔から運動が苦手で…。", choices: [ { text: "俺も運動苦手だよ！仲間だね。", effect: 20 }, { text: "運動すると健康になるよ。", effect: 0 }, { text: "俺が一緒にトレーニングしてあげようか？", effect: 28 }, { text: "それは残念だね。", effect: -10 }, { text: "別にいいんじゃない？", effect: -5 } ] },
+            { text: "どんな音楽が好き？", choices: [ { text: "ロックが好きだよ。", effect: 18 }, { text: "クラシックをよく聴くね。", effect: 12 }, { text: "君が好きな音楽なら何でも好きだよ。", effect: 30 }, { text: "特に好きなジャンルはないな。", effect: -5 }, { text: "音楽はあんまり聴かない。", effect: -15 } ] },
+            { text: "私って、ちょっと不器用かな？", choices: [ { text: "そんなことないよ、可愛らしいと思うけど。", effect: 30 }, { text: "ちょっとそうかもね。", effect: -10 }, { text: "その不器用さがまた魅力的だよ。", effect: 40 }, { text: "正直、かなり不器用だね。", effect: -30 }, { text: "どうでもいいよ。", effect: -20 } ] },
+            { text: "今、一番会いたい人って誰？", choices: [ { text: "家族に会いたいな。", effect: 12 }, { text: "友達と会いたいよ。", effect: 8 }, { text: "もちろん、君に一番会いたいよ。", effect: 50 }, { text: "特に会いたい人いないね。", effect: -20 }, { text: "なんでそんなこと聞くの？", effect: -30 } ] },
+
+            // 追加会話例（多様な内容で数を増やす）
+            { text: "最近アニメとかドラマ見てる？", choices: [ { text: "見てるよ！〇〇っていうアニメにハマってる。", effect: 20 }, { text: "あんまり見ないかな。", effect: 5 }, { text: "君のおすすめなら見てみる！", effect: 25 }, { text: "見る暇ないんだよね。", effect: -5 } ] },
+            { text: "好きな季節ってある？", choices: [ { text: "やっぱり春かな、桜が綺麗だし。", effect: 18 }, { text: "夏！海とか花火とか楽しいじゃん。", effect: 20 }, { text: "君がいる季節が一番好きだよ。", effect: 30 }, { text: "特にない。", effect: -5 } ] },
+            { text: "休日の朝って何して過ごす？", choices: [ { text: "ゆっくり寝てるかな。", effect: 10 }, { text: "早起きして散歩とかするよ。", effect: 15 }, { text: "君の声で目覚めたいな。", effect: 28 }, { text: "だいたい二日酔い。", effect: -10 } ] },
+            { text: "朝ごはんはパン派？ご飯派？", choices: [ { text: "断然パン派！", effect: 15 }, { text: "ご飯派だよ。", effect: 10 }, { text: "君が作ってくれるならどっちでも！", effect: 25 }, { text: "朝ごはんは食べないんだ。", effect: -5 } ] },
+            { text: "ストレス解消法って何かある？", choices: [ { text: "好きな音楽を聴くことかな。", effect: 18 }, { text: "体を動かすとスッキリするよ。", effect: 15 }, { text: "君と話すのが一番のストレス解消法だよ。", effect: 30 }, { text: "特にないんだ。", effect: -10 } ] },
+            { text: "最近笑ったことってある？", choices: [ { text: "昨日テレビで面白い番組見た！", effect: 20 }, { text: "友達との会話で爆笑したよ。", effect: 18 }, { text: "君の笑顔を見ると自然と笑っちゃうんだ。", effect: 35 }, { text: "最近笑ってないかも。", effect: -10 } ] },
+            { text: "もし魔法が使えたら、何がしたい？", choices: [ { text: "空を飛んでみたい！", effect: 20 }, { text: "世界中の問題を解決したい。", effect: 15 }, { text: "君を笑顔にする魔法を使いたいな。", effect: 30 }, { text: "そんなこと考えたことない。", effect: -5 } ] },
+            { text: "子供の頃、どんな子だった？", choices: [ { text: "活発でやんちゃな子だったよ。", effect: 15 }, { text: "どちらかというと大人しい方だったかな。", effect: 10 }, { text: "君の子供の頃の話、もっと聞かせてほしいな。", effect: 25 }, { text: "覚えてないな。", effect: -5 } ] },
+            { text: "旅行に行くならどこがいい？", choices: [ { text: "沖縄のビーチでゆっくりしたい！", effect: 20 }, { text: "京都の歴史ある場所を巡りたいな。", effect: 18 }, { text: "君とならどこでも楽しいよ。", effect: 35 }, { text: "旅行はあまり行かないんだ。", effect: -10 } ] },
+            { text: "初めて会った時、どう思った？", choices: [ { text: "明るくて話しやすい子だなって思ったよ。", effect: 25 }, { text: "ちょっと緊張したかな。", effect: 10 }, { text: "一目惚れしたって言ったら驚くかな？", effect: 40 }, { text: "特に何も。", effect: -20 } ] },
+            { text: "最近感動したことって何かある？", choices: [ { text: "映画を見て泣いちゃった。", effect: 20 }, { text: "友達の頑張りに感動したよ。", effect: 18 }, { text: "君と出会えたことに感動してるよ。", effect: 35 }, { text: "特にないかな。", effect: -5 } ] },
+            { text: "もし生まれ変わるなら何になりたい？", choices: [ { text: "鳥になって自由に空を飛びたい！", effect: 20 }, { text: "猫になってのんびり過ごしたい。", effect: 15 }, { text: "君の隣にいる人になりたいな。", effect: 30 }, { text: "考えたことないよ。", effect: -5 } ] },
+            { text: "好きな飲み物って何？", choices: [ { text: "コーヒーが好きだよ。", effect: 10 }, { text: "紅茶をよく飲むかな。", effect: 12 }, { text: "君と飲むなら何でも美味しいよ。", effect: 25 }, { text: "特にこだわりはない。", effect: -3 } ] },
+            { text: "最近のマイブームってある？", choices: [ { text: "新しいゲームにどハマり中！", effect: 15 }, { text: "健康のためにウォーキングしてるよ。", effect: 18 }, { text: "君のこと考えるのがマイブームだよ。", effect: 30 }, { text: "特にないかな。", effect: -5 } ] },
+            { text: "インドア派？アウトドア派？", choices: [ { text: "どちらかというとインドア派かな。", effect: 10 }, { text: "外で体を動かすのが好きだよ！", effect: 20 }, { text: "君と一緒ならどっちでも楽しいよ。", effect: 30 }, { text: "日によるね。", effect: 5 } ] },
+            { text: "もしタイムスリップできるなら、いつの時代に行きたい？", choices: [ { text: "幕末の日本に行ってみたい！", effect: 18 }, { text: "未来に行って、技術の進歩を見たいな。", effect: 20 }, { text: "君がいた時代に行きたいな。", effect: 35 }, { text: "タイムスリップとか怖い。", effect: -10 } ] },
+            { text: "休日に必ずすることは？", choices: [ { text: "朝寝坊は必須だね！", effect: 10 }, { text: "部屋の片付けをするよ。", effect: 12 }, { text: "君にメッセージを送ることかな。", effect: 28 }, { text: "特に決まってないんだ。", effect: -5 } ] },
+            { text: "好きな動物はいる？", choices: [ { text: "犬が好き！フワフワしてて可愛いよね。", effect: 20 }, { text: "猫派かな。", effect: 18 }, { text: "君が一番可愛いよ。", effect: 35 }, { text: "動物は苦手なんだ。", effect: -15 } ] },
+            { text: "どんな音楽を聴くのが好き？", choices: [ { text: "J-POPをよく聴くよ。", effect: 15 }, { text: "洋楽が好きだな。", effect: 12 }, { text: "君が好きな音楽、教えてほしいな。", effect: 25 }, { text: "音楽はあまり聴かない。", effect: -5 } ] },
+            { text: "もし何か一つ願いが叶うなら？", choices: [ { text: "世界平和を願うよ。", effect: 20 }, { text: "宝くじを当てて大金持ちになりたい！", effect: 15 }, { text: "君とずっと一緒にいられますようにって願うよ。", effect: 50 }, { text: "特にないかな。", effect: -10 } ] },
+            // さらに多様な会話を追加して、合計100種類以上にする
+            { text: "最近、何か新しい発見があった？", choices: [ { text: "知らないカフェを見つけたよ。", effect: 18 }, { text: "新しいお店を開拓した！", effect: 20 }, { text: "君の新しい魅力を発見したよ。", effect: 35 }, { text: "特にないね。", effect: -5 } ] },
+            { text: "好きな季節の匂いってある？", choices: [ { text: "夏の海の匂いかな。", effect: 15 }, { text: "冬の焚き火の匂い。", effect: 12 }, { text: "君の匂いが一番好きだよ。", effect: 30 }, { text: "特にない。", effect: -5 } ] },
+            { text: "もし透明になれたら、何したい？", choices: [ { text: "好きなアイドルのライブに潜入したい！", effect: 15 }, { text: "世界中の秘密基地を探したい。", effect: 18 }, { text: "君のそばにずっといて、守ってあげたいな。", effect: 40 }, { text: "特にやりたいことはない。", effect: -10 } ] },
+            { text: "どんなテレビ番組をよく見る？", choices: [ { text: "バラエティ番組で笑ってるよ。", effect: 15 }, { text: "ドキュメンタリー番組が好き。", effect: 12 }, { text: "君と一緒ならどんな番組でも楽しいよ。", effect: 28 }, { text: "テレビはあまり見ない。", effect: -5 } ] },
+            { text: "最近、頑張ったことってある？", choices: [ { text: "仕事で大きなプロジェクトをやり遂げた！", effect: 25 }, { text: "苦手なことに挑戦したよ。", effect: 20 }, { text: "君に振り向いてもらうために頑張ってるよ。", effect: 40 }, { text: "特にないかな。", effect: -8 } ] },
+            { text: "もし過去に戻れるなら、いつに戻りたい？", choices: [ { text: "小学生の頃に戻って、もう一度遊びたい。", effect: 15 }, { text: "高校生の頃に戻って、青春をやり直したい。", effect: 20 }, { text: "君と初めて出会った瞬間に戻って、もっと早く告白したいな。", effect: 50 }, { text: "過去には戻りたくない。", effect: -10 } ] },
+            { text: "好きな遊園地の乗り物は何？", choices: [ { text: "ジェットコースター！絶叫系が好き。", effect: 20 }, { text: "観覧車でゆっくり景色を見たい。", effect: 15 }, { text: "君と乗るならどんな乗り物でも楽しいよ。", effect: 35 }, { text: "遊園地はあまり行かない。", effect: -5 } ] },
+            { text: "最近、感動した本とか漫画はある？", choices: [ { text: "泣ける小説を読んだよ。", effect: 20 }, { text: "考えさせられる漫画に出会った。", effect: 18 }, { text: "君という存在が、俺にとって一番感動する物語だよ。", effect: 40 }, { text: "あんまり読まないんだ。", effect: -5 } ] },
+            { text: "もし一日だけ動物になれるなら何になりたい？", choices: [ { text: "空を自由に飛ぶ鳥になりたい！", effect: 20 }, { text: "ライオンになって百獣の王になりたい。", effect: 15 }, { text: "君の飼ってるペットになって、ずっとそばにいたいな。", effect: 35 }, { text: "特にない。", effect: -10 } ] },
+            { text: "好きな季節のイベントは？", choices: [ { text: "夏の花火大会が好き！", effect: 20 }, { text: "冬のイルミネーションかな。", effect: 18 }, { text: "君と一緒ならどんなイベントも最高だよ。", effect: 35 }, { text: "特にないね。", effect: -5 } ] },
+            { text: "最近、心が癒されたことってある？", choices: [ { text: "可愛い動物の動画を見た！", effect: 18 }, { text: "温泉に行ってリラックスしたよ。", effect: 20 }, { text: "君の存在が俺の癒しだよ。", effect: 40 }, { text: "特にないかな。", effect: -8 } ] },
+            { text: "もし魔法の絨毯があったらどこに行きたい？", choices: [ { text: "世界中の絶景を見に行きたい！", effect: 25 }, { text: "宇宙に行ってみたい！", effect: 20 }, { text: "君の隣に座って、どこまでも行きたいな。", effect: 45 }, { text: "特に乗りたくない。", effect: -10 } ] },
+            { text: "どんな香りが好き？", choices: [ { text: "柑橘系の爽やかな香り。", effect: 15 }, { text: "フローラル系の甘い香り。", effect: 18 }, { text: "君の香りが一番好きだよ。", effect: 30 }, { text: "特にこだわりはない。", effect: -5 } ] },
+            { text: "最近、驚いたことってある？", choices: [ { text: "テレビで見たニュースに驚いた。", effect: 10 }, { text: "友達の意外な一面を知った！", effect: 15 }, { text: "君の可愛さに毎日驚かされてるよ。", effect: 35 }, { text: "特にないね。", effect: -5 } ] },
+            { text: "もし一日だけ誰とでも入れ替われるなら？", choices: [ { text: "大金持ちになってみたい！", effect: 10 }, { text: "憧れの有名人になってみたい。", effect: 15 }, { text: "君になって、君の気持ちを全部知りたいな。", effect: 40 }, { text: "特に誰とも入れ替わりたくない。", effect: -10 } ] },
+            { text: "どんなお菓子が好き？", choices: [ { text: "チョコレートが好き！", effect: 15 }, { text: "和菓子をよく食べるかな。", effect: 12 }, { text: "君と食べるお菓子なら何でも美味しいよ。", effect: 28 }, { text: "甘いものは苦手なんだ。", effect: -5 } ] },
+            { text: "最近、心が温まったことってある？", choices: [ { text: "困ってる人を助けられた！", effect: 20 }, { text: "友達からの温かい言葉。", effect: 18 }, { text: "君の笑顔を見るたびに心が温まるよ。", effect: 40 }, { text: "特にないね。", effect: -8 } ] },
+            { text: "もし時間を止められるなら何する？", choices: [ { text: "ゆっくり休む！", effect: 10 }, { text: "世界中を旅したい！", effect: 20 }, { text: "君との時間を永遠に止めたいな。", effect: 45 }, { text: "特にやりたいことはない。", effect: -10 } ] },
+            { text: "好きな飲み物って何？", choices: [ { text: "コーヒーが好きだよ。", effect: 10 }, { text: "紅茶をよく飲むかな。", effect: 12 }, { text: "君と飲むなら何でも美味しいよ。", effect: 25 }, { text: "特にこだわりはない。", effect: -3 } ] },
+            { text: "最近のマイブームってある？", choices: [ { text: "新しいゲームにどハマり中！", effect: 15 }, { text: "健康のためにウォーキングしてるよ。", effect: 18 }, { text: "君のこと考えるのがマイブームだよ。", effect: 30 }, { text: "特にないかな。", effect: -5 } ] },
+            { text: "インドア派？アウトドア派？", choices: [ { text: "どちらかというとインドア派かな。", effect: 10 }, { text: "外で体を動かすのが好きだよ！", effect: 20 }, { text: "君と一緒ならどっちでも楽しいよ。", effect: 30 }, { text: "日によるね。", effect: 5 } ] },
+            { text: "もしタイムスリップできるなら、いつの時代に行きたい？", choices: [ { text: "幕末の日本に行ってみたい！", effect: 18 }, { text: "未来に行って、技術の進歩を見たいな。", effect: 20 }, { text: "君がいた時代に行きたいな。", effect: 35 }, { text: "タイムスリップとか怖い。", effect: -10 } ] },
+            { text: "休日に必ずすることは？", choices: [ { text: "朝寝坊は必須だね！", effect: 10 }, { text: "部屋の片付けをするよ。", effect: 12 }, { text: "君にメッセージを送ることかな。", effect: 28 }, { text: "特に決まってないんだ。", effect: -5 } ] },
+            { text: "好きな動物はいる？", choices: [ { text: "犬が好き！フワフワしてて可愛いよね。", effect: 20 }, { text: "猫派かな。", effect: 18 }, { text: "君が一番可愛いよ。", effect: 35 }, { text: "動物は苦手なんだ。", effect: -15 } ] },
+            { text: "どんな音楽を聴くのが好き？", choices: [ { text: "J-POPをよく聴くよ。", effect: 15 }, { text: "洋楽が好きだな。", effect: 12 }, { text: "君が好きな音楽、教えてほしいな。", effect: 25 }, { text: "音楽はあまり聴かない。", effect: -5 } ] },
+            { text: "もし何か一つ願いが叶うなら？", choices: [ { text: "世界平和を願うよ。", effect: 20 }, { text: "宝くじを当てて大金持ちになりたい！", effect: 15 }, { text: "君とずっと一緒にいられますようにって願うよ。", effect: 50 }, { text: "特にないかな。", effect: -10 } ] },
+        ];
+
+
+        function getRandomDialogues(num) {
+            const shuffled = [...allDialogues].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        function getRandomHeroineName() {
+            if (availableHeroineNames.length === 0) {
+                availableHeroineNames = [...heroineNamesPool];
+            }
+            const index = Math.floor(Math.random() * availableHeroineNames.length);
+            return availableHeroineNames.splice(index, 1)[0];
+        }
+
+        let selectedDialogues = [];
+        
+        const heroines = {
+            heroineA: { type: "A" },
+            heroineB: { type: "B" },
+            heroineC: { type: "C" }
+        };
+
+        function startGame(heroineKey) {
+            currentHeroine = { ...heroines[heroineKey] };
+            currentHeroine.name = getRandomHeroineName();
+            selectedDialogues = getRandomDialogues(10);
+            currentHeroine.dialogues = selectedDialogues;
+
+            affection = 0;
+            turn = 0;
+            confessionStep = 0;
+
+            startScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden'); // ゲーム画面はまだ隠しておく
+            confessionScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            badEndScreen.classList.add('hidden');
+
+            showIntroScreen(); // 自己紹介パートを表示
+        }
+
+        function showIntroScreen() {
+            introHeroineName.textContent = currentHeroine.name;
+            introDialogueText.textContent = `${currentHeroine.name}: 「初めまして！私の名前は${currentHeroine.name}だよ。よろしくね、ワイ君！」`;
+            introScreen.classList.remove('hidden');
+        }
+
+        function startMainGame() {
+            introScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            heroineNameDisplay.textContent = currentHeroine.name;
+            turnCountDisplay.textContent = turn;
+            
+            nextDialogue();
+        }
+
+
+        function nextDialogue() {
+            if (turn >= 10) {
+                startConfession();
+                return;
+            }
+
+            const dialogueData = currentHeroine.dialogues[turn];
+            if (!dialogueData) {
+                console.error("会話データが不足しています。");
+                startConfession();
+                return;
+            }
+            dialogueText.textContent = `${currentHeroine.name}: 「${dialogueData.text}」`;
+
+            choiceButtons.innerHTML = '';
+            // 選択肢の表示順をランダムにする
+            const shuffledChoices = [...dialogueData.choices].sort(() => 0.5 - Math.random());
+            shuffledChoices.forEach(choice => {
+                const button = document.createElement('button');
+                button.textContent = choice.text;
+                button.onclick = () => selectChoice(choice.effect);
+                choiceButtons.appendChild(button);
+            });
+
+            turn++;
+            turnCountDisplay.textContent = turn;
+        }
+
+        function selectChoice(effect) {
+            // 5%の確率で強制バッドエンド
+            if (Math.random() * 100 < 5) { // 0から99.99...までの乱数
+                triggerBadEnd();
+                return;
+            }
+
+            affection += effect;
+            if (affection < 0) affection = 0;
+            nextDialogue();
+        }
+
+        const confessionSequence = {
+            // ワイ君が告白
+            playerConfession: [
+                "ねぇ、君に伝えたいことがあるんだ。",
+                "君と過ごした時間、本当に楽しかったし、君のことばかり考えてたんだ。",
+                "この気持ち、もう抑えられないよ。",
+                "俺、君のことが、本当に、本当に大好きだ！",
+                "俺と、付き合ってほしい！"
+            ],
+            // ヒロインの返事（好感度に応じて分岐）
+            heroineResponse: {
+                lover: [
+                    "「…ワイ君。私も、ワイ君のことが大好きだよ！」",
+                    "「ワイ君の隣にいると、すごく幸せな気持ちになるんだ。」",
+                    "「私でよければ、これからもずっと一緒にいてください！」"
+                ],
+                friend: [
+                    "「…ワイ君。その気持ち、嬉しいけど…」",
+                    "「ワイ君は、私にとって大切な友達だよ。」",
+                    "「これからも、ずっと仲の良い友達でいてほしいな！」"
+                ],
+                // こっぴどく振られる際の返事をより冷たく変更
+                rejected: [
+                    "「…は？何言ってんの？」",
+                    "「まさか、本気で私と付き合えるとか思ってたわけ？勘違いも甚だしいんだけど。」",
+                    "「悪いけど、あなたとは住む世界が違うの。二度と私の前に現れないで。」"
+                ]
+            }
+        };
+
+        function startConfession() {
+            gameScreen.classList.add('hidden');
+            confessionScreen.classList.remove('hidden');
+            confessionStep = 0;
+
+            if (affection >= 300) {
+                confessionResult = 'lover';
+            } else if (affection >= 100) {
+                confessionResult = 'friend';
+            } else {
+                confessionResult = 'rejected';
+            }
+            showConfessionDialogue();
+        }
+
+        function showConfessionDialogue() {
+            let currentDialogues;
+            let speaker = 'ワイ君';
+
+            if (confessionStep < confessionSequence.playerConfession.length) {
+                currentDialogues = confessionSequence.playerConfession;
+                confessionDialogueText.textContent = `${speaker}: 「${currentDialogues[confessionStep]}」`;
+                confessionStep++;
+            } else {
+                const heroineResponseIndex = confessionStep - confessionSequence.playerConfession.length;
+                currentDialogues = confessionSequence.heroineResponse[confessionResult];
+
+                if (heroineResponseIndex < currentDialogues.length) {
+                    speaker = currentHeroine.name;
+                    confessionDialogueText.textContent = `${speaker}: ${currentDialogues[heroineResponseIndex]}`;
+                    confessionStep++;
+                } else {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        function triggerBadEnd() {
+            gameScreen.classList.add('hidden');
+            introScreen.classList.add('hidden'); // Bad End時も隠す
+            badEndScreen.classList.remove('hidden');
+
+            badEndTitle.textContent = "強制バッドエンド";
+            badEndMessage.innerHTML = `
+                「ごめん、ワイ君。私、この人と付き合うことになったの。」<br>
+                そう言って、${currentHeroine.name}は君の目の前で、眩いばかりのイケメンに寄り添った。<br>
+                イケメンは君を一瞥し、嘲笑うかのように鼻で笑った。<br>
+                「お前みたいな雑魚が、彼女に釣り合うとでも思ったのか？身の程を知れ。」<br>
+                君のプライドは粉々に砕け散り、その場に立ち尽くすことしかできなかった。<br>
+                君に恋のチャンスは、もう二度と訪れないだろう。<br>
+                （最終好感度: ${affection}）
+            `;
+        }
+
+
+        function endGame() {
+            confessionScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            let title = "";
+            let message = "";
+
+            if (confessionResult === 'lover') {
+                title = "ゲームクリア！おめでとう！";
+                message = `${currentHeroine.name}はワイ君の告白を受け入れて、恋人になったよ！\nワイ君たちの関係は「恋人」だ。末永くお幸せに！\n（最終好感度: ${affection}）`;
+            } else if (confessionResult === 'friend') {
+                title = "ゲームオーバー…友達のままだったね";
+                message = `${currentHeroine.name}はワイ君の告白に戸惑って、「良い友達でいようね！」って言ったよ。\nワイ君たちの関係は「友達」だ。これからの進展に期待しよう！\n（最終好感度: ${affection}）`;
+            } else { // 'rejected'
+                title = "ゲームオーバー！こっぴどく振られた…";
+                message = `${currentHeroine.name}はワイ君の告白に顔をしかめて、「ごめんなさい、私とは合わないみたい…」って冷たく言い放ったよ。\nワイ君たちの関係は「赤の他人」だ。ドンマイ！\n（最終好感度: ${affection}）`;
+            }
+
+            resultTitle.textContent = title;
+            resultMessage.textContent = message;
+        }
+
+        function resetGame() {
+            startScreen.classList.remove('hidden');
+            introScreen.classList.add('hidden'); // 追加
+            gameScreen.classList.add('hidden');
+            confessionScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            badEndScreen.classList.add('hidden'); // Bad End画面も隠す
+            availableHeroineNames = [...heroineNamesPool];
+        }
+
+        // イベントリスナー
+        selectHeroine1Button.addEventListener('click', () => startGame('heroineA'));
+        selectHeroine2Button.addEventListener('click', () => startGame('heroineB'));
+        selectHeroine3Button.addEventListener('click', () => startGame('heroineC'));
+        introNextButton.addEventListener('click', startMainGame); // 追加
+        confessionNextButton.addEventListener('click', showConfessionDialogue);
+        restartButton.addEventListener('click', resetGame);
+        restartButtonBadEnd.addEventListener('click', resetGame); // Bad Endからのリスタートボタン
+
+        // 初期表示
+        resetGame();
+    </script>
+</body>
+</html>

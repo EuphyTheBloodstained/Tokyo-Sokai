@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ルルーシュトークゲーム</title>
+    <style>
+        body {
+            font-family: 'Arial', 'メイリオ', sans-serif;
+            background-color: #000;
+            color: #FFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto; /* スクロール可能にする */
+        }
+        .container {
+            background-color: #333;
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        h1 {
+            color: #0FF;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+        #chat-log {
+            background-color: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+            word-wrap: break-word;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        #chat-log p {
+            margin: 5px 0;
+        }
+        .user-message {
+            color: #FFF;
+            text-align: right;
+        }
+        .lulu-message {
+            color: #0FF;
+            font-weight: bold;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #0FF;
+            background-color: #444;
+            color: #FFF;
+            font-size: 1.1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        #user-input:focus {
+            border-color: #FFF;
+        }
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            background-color: #0FF;
+            color: #000;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #FFF;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* スクロールバーのスタイル */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #222;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0FF;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FFF;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .container {
+                padding: 20px;
+                width: 95%;
+            }
+            .input-area {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ルルーシュトークゲーム</h1>
+        <div id="chat-log">
+            <p class="lulu-message">ルルーシュ: 私に何か言ってみろ。貴様の言葉が、私にどう響くか試してみるがいい。</p>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="ここにメッセージを入力...">
+            <button id="send-button">送る</button>
+        </div>
+    </div>
+
+    <script>
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const chatLog = document.getElementById('chat-log');
+
+        const luluReactions = [
+            // 肯定的な反応
+            { patterns: ['すごい', '素晴らしい', '天才', '最高'], reactions: [
+                "フン、当然だ。このルルーシュ・ヴィ・ブリタニアに不可能はない。常に上を行く、それが私の流儀だ。",
+                "私の力を認めるか。それもいいだろう。私にはそれだけの力がある。『撃っていいのは撃たれる覚悟のある奴だけだ』、私の決断は常に正しい。",
+                "その評価、受け取っておこう。だが、これはまだ序章に過ぎない。世界は、私の思惑通りに動く。『私は世界を壊し、世界を創造する！』",
+                "見抜いたか。だが、貴様には私の計画の全ては見えまい。真の力とは、常に隠されたものだ。",
+                "感謝する。しかし、私にとって最も重要なのは結果だ。貴様の言葉も、私には一手となる。",
+                "当然の評価だ。私を甘く見るな。『結果が全てだ！』"
+            ]},
+            // 否定的な反応・挑戦的な反応
+            { patterns: ['馬鹿', '愚か', '嘘', '違う', '不可能'], reactions: [
+                "ふん、愚かな。私の判断が誤っていたとでも言うのか？貴様には理解できまい。全ては計画の内だ。",
+                "不可能だと？私の辞書にそんな言葉はない。『撃っていいのは撃たれる覚悟のある奴だけだ』。貴様にはその覚悟があるのか？",
+                "否定するか。だが、貴様は真実を知らない。この世界は、私が変える。『ギアス、かかれ！』",
+                "貴様の限界で物を言うな。私には、無限の選択肢がある。全ては私の思い通りに。",
+                "私に逆らうか。良いだろう。貴様の限界を見せてやろう。だが、後悔するなよ。",
+                "嘘だと？貴様には真実が見えていないだけだ。『私は世界を壊し、世界を創造する！』"
+            ]},
+            // 質問への反応
+            { patterns: ['なぜ', 'どうして', '教えて', '何'], reactions: [
+                "知りたいか？ならば、貴様自身の目で確かめてみろ。真実は常に隠されている。",
+                "貴様にはまだ知る必要のないことだ。時期が来れば、全ては明らかになるだろう。",
+                "私に問いかけるか。だが、その答えを得るには、貴様自身がリスクを負う必要があるぞ。",
+                "質問の意図が見えぬな。私にとって、不必要な情報は意味をなさない。",
+                "答える義理はない。だが、貴様が私にとって有益な存在ならば、話は別だがな。",
+                "理由を知りたいか？『違う！間違っているのは世界の方だ！』"
+            ]},
+            // 挨拶
+            { patterns: ['こんにちは', 'こんばんは', 'やあ', 'ども'], reactions: [
+                "貴様か。何の用だ？",
+                "フン。挨拶など不要だ。本題に入れ。",
+                "どうでもいい。私を煩わせるな。",
+                "貴様との無駄話に割く時間はない。",
+                "ふむ、貴様もここにいるのか。偶然というには出来すぎているな。",
+                "必要とあらば、言葉を交わすまでだ。"
+            ]},
+            // 褒め言葉
+            { patterns: ['かっこいい', '素敵', '魅力的'], reactions: [
+                "その言葉、私には不要だ。私は、ただ目的を遂行するのみ。",
+                "私の本質を理解しているようだな。だが、表面的なものではない。",
+                "魅了されたか？フン、当然だ。私はそれだけの器だ。",
+                "私の魅力に気づいたか。貴様も悪くないな。",
+                "褒め言葉など、何の価値もない。私の行動こそが全てだ。『ギアス、かかれ！』"
+            ]},
+            // 暇つぶし、退屈
+            { patterns: ['暇', '退屈', '何もすることない'], reactions: [
+                "暇だと？私にはそんな時間はない。常に先を読み、策を練っている。『愚かな！』",
+                "退屈を覚えるか。それもまた、貴様の器量を示すものだ。",
+                "世界は常に動いている。貴様が退屈だと感じるのは、貴様が動こうとしないからだ。",
+                "無為な時間を過ごすな。貴様にも成すべきことがあるはずだ。『撃っていいのは撃たれる覚悟のある奴だけだ』",
+                "私に暇つぶしの相手をさせるか。貴様、度胸があるな。"
+            ]},
+            // 希望、夢
+            { patterns: ['希望', '夢', '未来'], reactions: [
+                "希望など、常に脆いものだ。私は、自らの手で未来を掴む。『私は世界を壊し、世界を創造する！』",
+                "夢を見るか。だが、夢はただの幻に過ぎない。現実こそが全てだ。",
+                "未来は、誰かに与えられるものではない。自らが切り開くものだ。",
+                "貴様の希望、私にとっては些細なものだ。私の希望こそが、この世界を変える。",
+                "夢か。それを現実にする力があるならば、見せてみろ。"
+            ]},
+            // 裏切り、嘘
+            { patterns: ['裏切り', '嘘つき', '騙す'], reactions: [
+                "裏切りだと？私の辞書にそんな言葉はない。全ては私の計画の内だ。",
+                "嘘だと？貴様には真実が見えていないだけだ。『違う！間違っているのは世界の方だ！』",
+                "私を騙せると思っているのか？愚かだな。貴様の思考など、私にはお見通しだ。",
+                "私が嘘をつくのは、勝利のためだ。貴様には、その意味が理解できるか？",
+                "裏切りは、弱者の行いだ。私は、常に勝利を掴む。『結果が全てだ！』"
+            ]},
+            // 強気な発言
+            { patterns: ['勝つ', '強い', '最強'], reactions: [
+                "勝つのは当然だ。私には、それを実現する力がある。『撃っていいのは撃たれる覚悟のある奴だけだ』",
+                "強いと？貴様には、私の真の力が見えていない。私は、常に進化する。",
+                "最強などという言葉は、虚しい。常に上を目指すのみだ。",
+                "その評価、受け取っておこう。だが、私にとって最も重要なのは、結果だ。",
+                "貴様もそう思うか。だが、慢心はしない。常に、最悪の事態を想定している。"
+            ]},
+            // 困惑、混乱
+            { patterns: ['困った', 'わからない', 'どうすれば'], reactions: [
+                "困惑しているようだな。貴様には、私の思考についてこられないか。",
+                "分からないと？愚かだな。私には全てが見えている。",
+                "私に頼るか。だが、貴様自身の答えは貴様の中にあるはずだ。",
+                "混沌を恐れるな。そこから新たな秩序が生まれることもある。『ギアス、かかれ！』",
+                "迷うな。決断せよ。それが、貴様の進むべき道を示すだろう。"
+            ]},
+            // 感謝
+            { patterns: ['ありがとう', '感謝'], reactions: [
+                "感謝など不要だ。貴様が私にとって有益であったならば、それで良い。",
+                "フン。私の力の一部となっただけだ。",
+                "その言葉、受け取っておこう。だが、私の行動は、感謝を求めるものではない。",
+                "感謝されるようなことはしていない。全ては、私の計画のためだ。",
+                "貴様も、私の目的のために役立ったな。"
+            ]},
+            // 汎用的な反応 (特にキーワードがない場合や、より多くのバリエーションを出すため)
+            { patterns: [], reactions: [
+                "フン。貴様の言葉に、何の価値がある？",
+                "どうでもいい。私を煩わせるな。",
+                "貴様の思考は読める。浅いな。",
+                "時間の無駄だ。本題に入れ。",
+                "私に何を期待する？",
+                "その言葉、私にはどう響くか、まだ判断しかねるな。",
+                "なるほど。貴様もそう考えるか。",
+                "私には関係のないことだ。",
+                "貴様が何を言おうと、私の計画に影響はない。",
+                "それだけか？",
+                "貴様の言葉など、私にとっては雑音に過ぎない。",
+                "私の判断は絶対だ。貴様などに惑わされはしない。『撃っていいのは撃たれる覚悟のある奴だけだ』",
+                "無意味な会話だ。貴様にもっと他にすべきことがあるだろう。",
+                "私の目的は、貴様には理解できないだろうな。『私は世界を壊し、世界を創造する！』",
+                "言葉遊びなど、私には不要だ。行動こそが全てだ。",
+                "貴様が何を言おうと、私の決意は揺るがない。",
+                "愚かな。貴様にはまだ、真実が見えていない。『違う！間違っているのは世界の方だ！』",
+                "全ては私の思惑通りに動く。貴様もその駒の一つに過ぎない。",
+                "退屈な。もっと面白い言葉はないのか？",
+                "私に、貴様の人生を賭けてみろ。面白いものが見られるかもしれんぞ。",
+                "貴様の言葉は、私に何をもたらす？"
+            ]}
+        ];
+
+        function getLuluReaction(input) {
+            const lowerInput = input.toLowerCase();
+            let matchedReactions = [];
+
+            for (const category of luluReactions) {
+                const isMatched = category.patterns.some(pattern => lowerInput.includes(pattern));
+                if (isMatched) {
+                    matchedReactions = matchedReactions.concat(category.reactions);
+                }
+            }
+
+            // 特定のパターンにマッチしない場合、汎用的な反応も考慮に入れる
+            if (matchedReactions.length === 0) {
+                const genericReactions = luluReactions.find(cat => cat.patterns.length === 0).reactions;
+                matchedReactions = genericReactions;
+            } else {
+                // マッチした反応がある場合でも、汎用的な反応の一部を混ぜることでバリエーションを増やす
+                const genericReactions = luluReactions.find(cat => cat.patterns.length === 0).reactions;
+                for (let i = 0; i < Math.min(3, genericReactions.length); i++) { // 汎用的な反応を最大3つ追加
+                    if (Math.random() < 0.3) { // 30%の確率で追加
+                        matchedReactions.push(genericReactions[Math.floor(Math.random() * genericReactions.length)]);
+                    }
+                }
+            }
+            
+            // 重複を削除してユニークな反応だけにする
+            matchedReactions = [...new Set(matchedReactions)];
+
+            if (matchedReactions.length > 0) {
+                const randomIndex = Math.floor(Math.random() * matchedReactions.length);
+                return matchedReactions[randomIndex];
+            }
+            return "フン、貴様の言葉には、私を動かす力がないようだな。"; // フォールバック
+        }
+
+        function sendMessage() {
+            const input = userInput.value.trim();
+            if (input === "") return;
+
+            // ユーザーのメッセージを追加
+            const userMessageDiv = document.createElement('p');
+            userMessageDiv.classList.add('user-message');
+            userMessageDiv.textContent = `貴様: ${input}`;
+            chatLog.appendChild(userMessageDiv);
+
+            // ルルーシュのリアクションを取得
+            const luluReaction = getLuluReaction(input);
+            const luluMessageDiv = document.createElement('p');
+            luluMessageDiv.classList.add('lulu-message');
+            luluMessageDiv.textContent = `ルルーシュ: ${luluReaction}`;
+            chatLog.appendChild(luluMessageDiv);
+
+            // スクロールを一番下まで移動
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+            // 入力欄をクリア
+            userInput.value = '';
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
